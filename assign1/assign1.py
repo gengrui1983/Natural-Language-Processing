@@ -1,5 +1,7 @@
 import csv
 from collections import defaultdict
+import numpy as np
+import pandas as pd
 
 
 def read_data(specified_name=None):
@@ -45,8 +47,27 @@ opt_rgen_dict = optimise_data(rgen_dict)
 print(opt_dict)
 print(opt_rgen_dict)
 
+with open('dict.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile)
+    for key, values in opt_dict.items():
+        writer.writerow([key, values, opt_rgen_dict[key]])
+
 industry_name = set()
 for key, values in opt_dict.items():
     industry_name.add(values)
+for key, values in opt_rgen_dict.items():
+    industry_name.add(values)
 print(industry_name)
 
+name_len = len(industry_name)
+
+A = np.zeros((name_len, name_len))
+df = pd.DataFrame(A, index=industry_name, columns=industry_name)
+print(df)
+print(df.at['Entertainment', 'Transport'])
+
+for key, values in opt_dict.items():
+    values_r = opt_rgen_dict[key]
+    df.at[values, values_r] += 1
+print(df)
+df.to_csv('df.csv', index=True, header=True, sep='\t')
