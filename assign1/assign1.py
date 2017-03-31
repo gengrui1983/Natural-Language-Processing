@@ -1,3 +1,8 @@
+"""
+The code is for generating statistical analysis of the given csv file, where contains the assigned classification for
+each of the items.
+"""
+
 import csv
 from collections import defaultdict
 import numpy as np
@@ -8,6 +13,12 @@ from sklearn.metrics import cohen_kappa_score
 
 
 def read_data(specified_name=None):
+    """
+    Read the data from the given csv file, and calculate the numbers of the classifications assigned for each of the 
+    organisations.
+    :param specified_name:  The specified username
+    :return:                The generated results
+    """
     full_tmp_dict = defaultdict(int)
 
     with open('annotations.csv', newline='') as csvfile:
@@ -27,6 +38,11 @@ def read_data(specified_name=None):
 
 
 def optimise_data(dictionary):
+    """
+    Optimising the data. Only keep the most selected classification. 
+    :param dictionary:  The input dictionary
+    :return:            The output dictionary
+    """
     optimised_dict = defaultdict(int)
 
     for key in dictionary:
@@ -39,6 +55,7 @@ def optimise_data(dictionary):
                 max_key = tmp_key
         optimised_dict[key] = max_key
     return optimised_dict
+
 
 def fleiss_kappa(M):
   """
@@ -55,7 +72,6 @@ def fleiss_kappa(M):
   P = (np.sum(M * M, axis=1) - n_annotators) / (n_annotators * (n_annotators - 1))
   Pbar = np.sum(P) / N
   PbarE = np.sum(p * p)
-  print(n_annotators)
 
   kappa = (Pbar - PbarE) / (1 - PbarE)
 
@@ -67,8 +83,6 @@ rgen_dict = read_data('rgen8070')
 
 opt_dict = optimise_data(full_dict)
 opt_rgen_dict = optimise_data(rgen_dict)
-
-print(opt_dict)
 
 with open('dict.csv', 'w') as csvfile:
     writer = csv.writer(csvfile)
@@ -87,29 +101,25 @@ industry_name = list(industry_name)
 A = np.zeros((name_len, name_len))
 df = pd.DataFrame(A, index=industry_name, columns=industry_name)
 
-dict_true = np.zeros(len(opt_dict))
-dict_rgen = np.zeros(len(opt_dict))
+list_true = np.zeros(len(opt_dict))
+list_rgen = np.zeros(len(opt_dict))
 
 a = 0
 for key, values in opt_dict.items():
     values_r = opt_rgen_dict[key]
     i = industry_name.index(values)
-    dict_true[a] = i
+    list_true[a] = i
     j = industry_name.index(values_r)
-    dict_rgen[a] = j
+    list_rgen[a] = j
     A[i, j] += 1
     a += 1
 
-print(dict_true)
-print(dict_rgen)
-
 df.to_csv('df.csv', index=True, header=True, sep='\t')
 
-c_matrix = confusion_matrix(dict_true, dict_rgen)
+c_matrix = confusion_matrix(list_true, list_rgen)
 print(c_matrix)
-print(classification_report(dict_true, dict_rgen,
- target_names=industry_name))
-print(cohen_kappa_score(dict_true, dict_rgen))
+print(classification_report(list_true, list_rgen, target_names=industry_name))
+print(cohen_kappa_score(list_true, list_rgen))
 
 org_names = []
 for key in rgen_dict:
